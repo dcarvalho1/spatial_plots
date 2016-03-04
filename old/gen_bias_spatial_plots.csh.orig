@@ -1,0 +1,96 @@
+#!/bin/csh
+
+
+#module load other/comp/gcc-4.5
+
+#module load other/SIVO-PyD/spd
+
+
+setenv ESMADIR /gpfsm/dnb02/wrmccart/progress_cvs/GEOSadas-5_13_0
+source /gpfsm/dnb02/wrmccart/progress_cvs/GEOSadas-5_13_0/src/g5_modules loadmodules > /dev/null
+module list
+module unload other/comp/gcc-4.5
+module load other/comp/gcc-4.6.3-sp1
+#module load lib/mkl-13.0.1.117
+#module load other/SIVO-PyD/spd_1.15.0_gcc-4.6.3-sp1_mkl-13.0.1.117
+module load lib/mkl-15.0.0.090
+module load other/SIVO-PyD/spd_1.20.0_gcc-4.6.3-sp1_mkl-15.0.0.090
+
+if ( $#argv > 1 || $#argv < 1 ) then
+    echo "usage: determine_inst.csh <directory with diags>"
+    exit 99
+endif
+
+echo this is for 5.12/5.13 and is using a namelist
+
+echo ln -sf process_diag.513.nl  process_diag.nl
+
+ln -sf process_diag.513.nl  process_diag.nl
+
+
+set dir=$argv[1]
+
+set workbase=$dir/work
+
+mkdir -p $workbase
+
+gen_webpage-hdrftr.py $dir
+
+set instlist=`determine_inst.csh $dir`
+
+set init='T'
+foreach inst ( $instlist )
+    ./gen_webpage-tbl.py $dir $inst
+    set init='T'
+    set workdir=$workbase/$inst
+    mkdir -p $workdir
+
+    if (-e $workdir/$inst.process.log) rm -f $workdir/$inst.process.log
+    find $dir |grep 'bin$' |grep ges |grep $inst > $workdir/$inst.all.ges.txt
+    cat $workdir/$inst.all.ges.txt |grep _00z.bin > $workdir/$inst.00z.ges.txt
+    cat $workdir/$inst.all.ges.txt |grep _06z.bin > $workdir/$inst.06z.ges.txt
+    cat $workdir/$inst.all.ges.txt |grep _12z.bin > $workdir/$inst.12z.ges.txt
+    cat $workdir/$inst.all.ges.txt |grep _18z.bin > $workdir/$inst.18z.ges.txt
+    foreach file (`cat $workdir/$inst.all.ges.txt`)
+        if (-e $file.dataarr) then
+            echo File Exists: $file.dataarr SKIPPING
+        else
+            ./process_diag $file >> $workdir/$inst.process.log
+        endif
+        echo ./aggregate_dataarr $workdir/$inst.all.agg $file.dataarr $init
+        ./aggregate_dataarr $workdir/$inst.all.agg $file.dataarr $init
+        set init='F'
+    end
+    ./generate_agg_plot.py $workdir/$inst.all.agg
+    echo COMPLETE: $inst.all.agg
+    foreach tHH ( 00 06 12 18 )
+        set init='T'
+        foreach file (`cat $workdir/$inst.$tHH\z.ges.txt`)
+            echo ./aggregate_dataarr $workdir/$inst.$tHH\z.agg $file.dataarr $init
+            ./aggregate_dataarr $workdir/$inst.$tHH\z.agg $file.dataarr $init
+            set init='F'
+        end
+        ./generate_agg_plot.py $workdir/$inst.$tHH\z.agg
+        echo COMPLETE: $inst.$tHH\z.agg
+    end
+
+    find $dir |grep bin |grep ges |grep $inst |grep dataarr > $workdir/$inst.all.ges.txt
+    set dates=`./determine_startdate_enddate.csh $dir $inst`
+    ./gen_weeklist_inputs.csh $dir $inst ${dates[2]} ${dates[1]}
+end
+
+if (-e $dir/index.html) rm $dir/index.html
+
+cat $dir/$dir.html.hdr >> $dir/index.html
+
+foreach file (`find $dir |grep .html.tbl`)
+    cat $file >> $dir/index.html
+end
+
+cat $dir/$dir.html.hdr >> $dir/index.html
+
+
+tar cvf $dir.tar `find $dir |grep 'png'` $dir/index.html
+
+if (-e process_diag.nl) rm process_diag.nl
+
