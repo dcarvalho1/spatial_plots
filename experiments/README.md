@@ -13,7 +13,7 @@ So step by step for radiances:
   * mkdir x0016_ctl
 2.  Copy the binary diag files into the directory
   * cp /archive/u/wrmccart/x0016_ctl/obs/Y2015/M09/D*/H*/*ges*bin /discover/nobackup/wrmccart/spatial_plots/experiments/x0016_ctl/
-3.  Remove by hand the ozone (e.g. *sbuv* *omi*), conventional binary (*conv*.bin) 
+3.  Remove by hand the ozone (e.g. \*sbuv\* *omi*), conventional binary (*conv*.bin) 
   * rm x0016_ctl/*sbuv* x0016_ctl/*conv*bin x0016_ctl/*pcp*
 4.  Trigger the script
   * ./gen_bias_spatial_plots.csh x0016_ctl
