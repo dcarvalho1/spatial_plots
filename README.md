@@ -8,3 +8,5 @@ This script is set up this way because I am no good at making makefiles.
 
 To clean up,
 * ./compile.csh clean
+
+Once compiled, you can begin processing experiments in the experiments/ directory
