@@ -19,7 +19,8 @@ So step by step for radiances:
   * ./gen_bias_spatial_plots.csh x0016_ctl
 5.  If the web interface is set up, copy the resulting tarball to the spatial/spatial_data/ directory and untar it
   * scp x0016_ctl.tar polar:/www/html/intranet/personnel/wmccarty/spatial/spatial_data
-  * ssh polar ; cd polar:/www/html/intranet/personnel/wmccarty/spatial/spatial_data ; tar xvf x0016_ctl.tar
+  * ssh polar 
+  * cd polar:/www/html/intranet/personnel/wmccarty/spatial/spatial_data ; tar xvf x0016_ctl.tar
 
 
 For the comparison plots, you simply need to run two experiments using the methodology above, then run
